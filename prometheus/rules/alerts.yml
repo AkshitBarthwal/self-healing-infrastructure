@@ -1,0 +1,25 @@
+groups:
+  - name: infrastructure-alerts
+    rules:
+      - alert: NginxServiceDown
+        expr: probe_success{job="nginx-health"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NGINX service is down"
+          description: "NGINX is unreachable for more than 1 minute."
+
+      - alert: HighCPUUsage
+        expr: |
+          100 * (
+            1 - avg by (instance) (
+              rate(node_cpu_seconds_total{mode="idle"}[5m])
+            )
+          ) > 90
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU utilization has exceeded 90% for more than 2 minutes."
