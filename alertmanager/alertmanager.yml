@@ -9,4 +9,7 @@ route:
   repeat_interval: 1h
 
 receivers:
-  - name: default-receiver
+  - name: webhook-receiver
+    webhook_configs:
+      - url: "http://webhook:5001/alerts"
+        send_resolved: true
