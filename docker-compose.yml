@@ -54,16 +54,20 @@ services:
       - "9093:9093"
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./secrets/webhook_token:/run/secrets/webhook_token:ro
+
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
     restart: unless-stopped
 
   webhook:
-    image: python:3.12-slim
+    build:
+      context: ./webhook
     container_name: webhook
     ports:
       - "5001:5001"
     volumes:
-      - ./webhook/receiver.py:/app/receiver.py:ro
-    command: ["python", "/app/receiver.py"]
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./secrets/webhook_token:/run/secrets/webhook_token:ro
     restart: unless-stopped
+

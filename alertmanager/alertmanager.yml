@@ -2,7 +2,7 @@ global:
   resolve_timeout: 5m
 
 route:
-  receiver: default-receiver
+  receiver: webhook-receiver
   group_by: ["alertname"]
   group_wait: 10s
   group_interval: 30s
@@ -13,3 +13,7 @@ receivers:
     webhook_configs:
       - url: "http://webhook:5001/alerts"
         send_resolved: true
+        http_config:
+          authorization:
+            type: Bearer
+            credentials_file: /run/secrets/webhook_token
