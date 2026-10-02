@@ -9,7 +9,7 @@ Prometheus, Alertmanager, and a custom Python webhook.
 
 ## 🏗️ Architecture
 
-NGINX → Prometheus → Alert Rules → Alertmanager → Webhook Receiver → Docker API → NGINX Restart
+![Self-Healing Infrastructure Architecture](architecture.png)
 
 ### Components
 
@@ -22,17 +22,54 @@ NGINX → Prometheus → Alert Rules → Alertmanager → Webhook Receiver → D
 - **Python Webhook:** Authenticates incoming alerts and triggers recovery.
 - **Docker:** Runs the services and allows the webhook to restart NGINX.
 
-## 🛠️ Technologies Used
+## Technology Stack
 
-- Docker and Docker Compose
-- Prometheus
-- Alertmanager
-- Python
-- NGINX
-- Node Exporter
-- cAdvisor
-- Blackbox Exporter
-- Linux and Bash
+| Technology | Purpose |
+|---|---|
+| Docker | Containerization |
+| Docker Compose | Multi-container orchestration |
+| NGINX | Application/service being monitored |
+| Prometheus | Metrics collection and alert evaluation |
+| Blackbox Exporter | HTTP health monitoring |
+| Node Exporter | Host system metrics |
+| cAdvisor | Container metrics |
+| Alertmanager | Alert routing and notification |
+| Python | Self-healing webhook |
+| Docker API | Automatic NGINX container restart |
+| Git & GitHub | Version control and project hosting |
+
+
+## How It Works
+
+The system follows this automated recovery flow:
+
+1. **Monitoring**
+   - Blackbox Exporter performs HTTP health checks against NGINX.
+   - Node Exporter collects host-level metrics.
+   - cAdvisor provides container metrics.
+   - Prometheus collects and evaluates these metrics.
+
+2. **Failure Detection**
+   - Prometheus evaluates the `NginxServiceDown` alert rule.
+   - If NGINX becomes unreachable for more than 1 minute, the alert enters the firing state.
+
+3. **Alert Notification**
+   - Prometheus sends the alert to Alertmanager.
+   - Alertmanager routes the alert to the Python webhook receiver.
+
+4. **Secure Webhook**
+   - The Python webhook validates the Bearer token.
+   - It checks whether the alert is the expected `NginxServiceDown` alert.
+   - A cooldown mechanism prevents repeated restart attempts.
+
+5. **Automatic Recovery**
+   - The webhook communicates with Docker through the Docker socket.
+   - The NGINX container is restarted automatically.
+
+6. **Recovery Verification**
+   - Blackbox Exporter detects that NGINX is reachable again.
+   - Prometheus marks the alert as resolved.
+   - Alertmanager sends the resolved notification to the webhook.
 
 ## ⚙️ Project Setup
 
@@ -78,6 +115,50 @@ docker compose ps
 | NGINX restart after alert | Successful in earlier test |
 | Cooldown behavior | Pending verification |
 | Latest Alertmanager notification delivery | Pending verification |
+
+## Project Structure
+
+```text
+self-healing-infrastructure/
+│
+├── alertmanager/
+│   └── alertmanager.yml
+│
+├── prometheus/
+│   ├── prometheus.yml
+│   └── rules/
+│       └── alerts.yml
+│
+├── blackbox/
+│   └── blackbox.yml
+│
+├── webhook/
+│   ├── Dockerfile
+│   └── receiver.py
+│
+├── secrets/
+│   └── webhook_token
+│
+├── screenshots/
+│   ├── 02-nginx-deployment.png
+│   ├── 03-prometheus-targets.png
+│   ├── 04-blackbox-nginx-health.png
+│   ├── 05-prometheus-alert-rules.png
+│   ├── 06-alertmanager-dashboard.png
+│   ├── 07-webhook-receiver-test.png
+│   ├── 08-alertmanager-test-alert.png
+│   ├── 09-webhook-alertmanager-delivery.png
+│   ├── 10-self-healing-nginx-recovery.png
+│   ├── 11-prometheus-alert-resolved.png
+│   ├── 12-self-healing-cooldown-test.png
+│   └── 13-real-incident-self-healing.png
+│
+├── backups/
+├── logs/
+├── architecture.png
+├── docker-compose.yml
+├── README.md
+└── .gitignore
 
 ## 📸 Screenshots
 
