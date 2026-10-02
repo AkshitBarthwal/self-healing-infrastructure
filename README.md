@@ -117,7 +117,6 @@ docker compose ps
 | Latest Alertmanager notification delivery | Pending verification |
 
 ## Project Structure
-
 ```text
 self-healing-infrastructure/
 │
@@ -159,6 +158,7 @@ self-healing-infrastructure/
 ├── docker-compose.yml
 ├── README.md
 └── .gitignore
+```
 
 ## 📸 Screenshots
 
